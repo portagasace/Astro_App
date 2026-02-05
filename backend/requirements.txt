@@ -1,0 +1,6 @@
+fastapi==0.115.6
+uvicorn[standard]==0.30.6
+pydantic==2.10.3
+pytz==2024.2
+httpx==0.27.2
+pyswisseph==2.10.3.2
