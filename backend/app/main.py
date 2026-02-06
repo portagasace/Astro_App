@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # <--- IMPORT THIS
 from .astrology.models import (
     BirthRequest, NatalChartResponse,
     TransitRequest, TransitResponse,
@@ -7,7 +8,17 @@ from .astrology.models import (
 from .astrology.swiss import to_utc, natal_chart_full, transits_range
 from .ai.hf_client import hf_generate
 
-app = FastAPI(title="Kundali Backend (Lahiri + Nakshatra + Bhava + Transits)", version="1.0.0")
+app = FastAPI(title="Kundali Backend", version="1.0.0")
+
+# --- VITAL FIX: ALLOW FRONTEND CONNECTION ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (Web, Android, iOS)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows POST, GET, OPTIONS, etc.
+    allow_headers=["*"],
+)
+# --------------------------------------------
 
 @app.get("/health")
 def health():
@@ -24,8 +35,7 @@ def natal(req: BirthRequest):
         "metadata": {
             "ayanamsa": "N.C. Lahiri",
             "node_type": "true_node",
-            "bhava_chalit": "Sripati unequal houses (houses_ex sidereal + 'S')",
-            "note": "Nakshatra pada divisions use 27 equal segments; pada=navamsa size (3°20')."
+            "bhava_chalit": "Sripati",
         }
     }
 
@@ -35,11 +45,7 @@ def transits(req: TransitRequest):
                           req.location.lat, req.location.lon)
     return {
         "days": days,
-        "metadata": {
-            "ayanamsa": "N.C. Lahiri",
-            "node_type": "true_node",
-            "step_days": req.step_days
-        }
+        "metadata": {"step_days": req.step_days}
     }
 
 @app.post("/api/ai/interpret", response_model=AIInterpretResponse)
